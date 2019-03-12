@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
+using Windows.Devices.Gpio;
 
 namespace NFApp1
 {
@@ -86,6 +87,15 @@ namespace NFApp1
 
         public static void Main()
         {
+            var gpioController = GpioController.GetDefault();
+
+            var blueLed = gpioController.OpenPin(5);
+            blueLed.SetDriveMode(GpioPinDriveMode.Output);
+
+            blueLed.Write(GpioPinValue.High);
+            Thread.Sleep(500);
+            blueLed.Write(GpioPinValue.Low);
+
             var localIp = SetupAndConnectNetwork();
             var localEndPoint = new IPEndPoint(IPAddress.Parse(localIp), 3671);
             var endpoint = new IPEndPoint(IPAddress.Parse("192.168.0.225"), 3671);
@@ -96,10 +106,27 @@ namespace NFApp1
                 //int i = _socket.SendTo(new byte[] { 0 }, _endpoint);
                 socket.Bind(localEndPoint);
 
+                while (true)
+                {
+                    blueLed.Write(GpioPinValue.High);
+                    Thread.Sleep(1000);
+                    blueLed.Write(GpioPinValue.Low);
+                    Thread.Sleep(1000);
+                }
+
+
             }
             catch (SocketException ex)
             {
                 int i = ex.ErrorCode;
+            }
+
+            while (true)
+            {
+                blueLed.Write(GpioPinValue.High);
+                Thread.Sleep(200);
+                blueLed.Write(GpioPinValue.Low);
+                Thread.Sleep(200);
             }
 
             Thread.Sleep(Timeout.Infinite);
